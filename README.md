@@ -1,4 +1,5 @@
-# Campus Check-in: Student Depression Risk Screener
+# Campus Check-in: Student Depression Risk Screener And CASE STUDY
+
 
 A web app that compares a student's study load, sleep and stress with 27,828 students
 in the public Student Depression dataset (Kaggle). It is an awareness tool, not a diagnosis.
