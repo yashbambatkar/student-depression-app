@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Campus Check-in: a two-minute student stress check</title>
+<meta name="description" content="Answer ten quick questions and see how your study load, sleep and stress compare with 27,828 students in a public dataset. An awareness tool, not a diagnosis.">
+<meta name="theme-color" content="#F4F6FB">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%231C2541'/%3E%3Cpath d='M7 21a9 9 0 0 1 18 0' fill='none' stroke='%237FD1C7' stroke-width='3.5' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:#F4F6FB;
+    --band:#E8EDF7;
+    --ink:#1C2541;
+    --muted:#55607E;
+    --lagoon:#1F6F78;
+    --lagoon-dark:#17565E;
+    --haze:#D5DCEB;
+    --track:#E3E8F3;
+    --sand:#F6EAD2;
+    --coral:#C8514B;
+    --amber:#B7791F;
+    --moss:#3F8A5A;
+    --display:"Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+    --body:"Instrument Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color-scheme: light;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  @media (prefers-reduced-motion: no-preference) { html { scroll-behavior: smooth; } }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--body); font-size: 17px; line-height: 1.6;
+  }
+  h1, h2, h3 { font-family: var(--display); line-height: 1.12; margin: 0; letter-spacing: -0.02em; }
+  p { margin: 0; }
+  a { color: var(--lagoon-dark); }
+  :focus-visible { outline: 3px solid var(--lagoon); outline-offset: 3px; border-radius: 6px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+  /* top bar */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 22px 0; flex-wrap: wrap; }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font-family: var(--display); font-weight: 700; font-size: 20px; letter-spacing: -0.01em; }
+  .brand svg { display: block; }
+  .topbar nav { display: flex; gap: 2px 22px; flex-wrap: wrap; }
+  .topbar nav a { color: var(--muted); text-decoration: none; font-weight: 500; font-size: 15px; padding: 6px 0; }
+  .topbar nav a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 5px; }
+
+  /* hero */
+  .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 540px); gap: 64px; align-items: start; padding: 28px 0 88px; }
+  .hero-copy { padding-top: 24px; }
+  .hero h1 { font-size: clamp(38px, 5.4vw, 64px); font-weight: 700; max-width: 14ch; }
+  .hero .lede { margin-top: 22px; font-size: 19px; color: var(--muted); max-width: 46ch; }
+  .facts { margin: 36px 0 0; padding: 0; display: grid; gap: 14px; max-width: 44ch; }
+  .facts div { display: grid; grid-template-columns: 9.5rem 1fr; gap: 14px; padding-top: 14px; border-top: 1px solid var(--haze); }
+  .facts dt { font-weight: 600; }
+  .facts dd { margin: 0; color: var(--muted); }
+  .notice { margin-top: 28px; font-size: 15px; color: var(--muted); max-width: 46ch; }
+
+  /* form card */
+  .card { background: #fff; border-radius: 24px; padding: 30px; box-shadow: 0 1px 2px rgba(28,37,65,.06), 0 18px 48px rgba(28,37,65,.09); }
+  .card h2 { font-size: 24px; }
+  .card .sub { color: var(--muted); font-size: 15px; margin-top: 6px; }
+  form { margin-top: 24px; display: grid; gap: 24px; }
+  fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+  legend { font-weight: 600; padding: 0; margin-bottom: 4px; }
+  .hint { color: var(--muted); font-size: 14px; margin-bottom: 10px; }
+  .pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .scale { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+  .ends { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .pill { position: relative; display: block; }
+  .pill input { position: absolute; opacity: 0; inset: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .pill span { display: flex; align-items: center; justify-content: center; text-align: center; min-height: 46px; padding: 8px 16px; border: 1.5px solid var(--haze); border-radius: 999px; background: #fff; font-weight: 500; transition: background .15s, border-color .15s, color .15s; }
+  .scale .pill span { padding: 8px 0; }
+  .pill:hover span { border-color: var(--lagoon); }
+  .pill input:checked + span { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .pill input:focus-visible + span { outline: 3px solid var(--lagoon); outline-offset: 3px; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  input[type="number"] { width: 100%; font: inherit; padding: 11px 14px; min-height: 46px; border: 1.5px solid var(--haze); border-radius: 12px; background: #fff; color: var(--ink); }
+  input[type="number"]:hover { border-color: var(--lagoon); }
+  .range-row { display: flex; align-items: center; gap: 16px; }
+  input[type="range"] { flex: 1; accent-color: var(--lagoon); height: 28px; }
+  output { font-family: var(--display); font-weight: 700; font-size: 20px; min-width: 4.5rem; text-align: right; }
+  .btn { font: inherit; font-weight: 600; font-size: 17px; border: 0; border-radius: 14px; padding: 16px 20px; cursor: pointer; background: var(--lagoon); color: #fff; width: 100%; transition: background .15s; }
+  .btn:hover { background: var(--lagoon-dark); }
+  .btn.ghost { background: transparent; color: var(--ink); border: 1.5px solid var(--haze); }
+  .btn.ghost:hover { background: var(--band); }
+  .btn[disabled] { opacity: .65; cursor: wait; }
+  .errors { background: #FBEAE8; color: #7C2620; border-radius: 12px; padding: 12px 14px; font-size: 15px; }
+  .server { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--amber); flex: none; }
+  .dot.ok { background: var(--moss); }
+  .dot.bad { background: var(--coral); }
+
+  /* result */
+  .result:focus { outline: none; }
+  .gauge { display: block; width: min(100%, 320px); margin: 20px auto 4px; }
+  .gauge .track { stroke: var(--track); }
+  .gauge .fill { transition: stroke-dasharray 1.1s cubic-bezier(.22,.8,.3,1); }
+  .gauge text { font-family: var(--display); font-weight: 700; fill: var(--ink); }
+  .band-label { text-align: center; font-family: var(--display); font-weight: 700; font-size: 26px; }
+  .band-text { text-align: center; color: var(--muted); margin: 8px auto 0; max-width: 38ch; }
+  .tips { margin: 26px 0 0; padding: 20px 0 0; border-top: 1px solid var(--haze); }
+  .tips h3 { font-size: 18px; margin-bottom: 10px; }
+  .tips ul { margin: 0; padding-left: 20px; display: grid; gap: 10px; }
+  .support { margin-top: 20px; background: var(--sand); border-radius: 14px; padding: 16px 18px; font-size: 15px; }
+  .fine { margin-top: 18px; font-size: 13px; color: var(--muted); }
+  .result .actions { display: grid; gap: 10px; margin-top: 22px; }
+
+  /* sections */
+  section.block { padding: 88px 0; }
+  section.band { background: var(--band); }
+  .section-head { max-width: 60ch; }
+  .section-head h2 { font-size: clamp(30px, 4vw, 44px); }
+  .section-head p { margin-top: 16px; color: var(--muted); font-size: 18px; }
+  .charts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 56px 64px; margin-top: 52px; }
+  .chart h3 { font-size: 20px; max-width: 28ch; }
+  .bars { margin-top: 18px; display: grid; gap: 10px; }
+  .bar { display: grid; grid-template-columns: 6.5rem 1fr 3.2rem; align-items: center; gap: 12px; font-size: 15px; }
+  .bar .lab { color: var(--muted); }
+  .bar .track { height: 14px; background: var(--track); border-radius: 999px; overflow: hidden; }
+  .bar .fill { height: 100%; background: var(--lagoon); border-radius: 999px; }
+  .bar .val { font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+  .chart .cap { margin-top: 10px; font-size: 13px; color: var(--muted); }
+  .aside { margin-top: 56px; padding-left: 20px; border-left: 4px solid var(--lagoon); max-width: 66ch; }
+
+  .about { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 64px; }
+  .about dl { margin: 0; display: grid; gap: 26px; }
+  .about dt { font-family: var(--display); font-weight: 700; font-size: 20px; }
+  .about dd { margin: 6px 0 0; color: var(--muted); max-width: 62ch; }
+
+  .help { background: var(--sand); }
+  .help .list { margin-top: 40px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
+  .help .list div { border-top: 2px solid var(--ink); padding-top: 14px; }
+  .help .list strong { display: block; font-size: 19px; font-family: var(--display); }
+  .help .list a.phone { display: inline-block; margin-top: 6px; font-size: 24px; font-family: var(--display); font-weight: 700; color: var(--ink); text-decoration: none; }
+  .help .list a.phone:hover { text-decoration: underline; }
+  .help .list p { margin-top: 6px; font-size: 15px; color: #4A4A4A; }
+
+  footer { padding: 40px 0 56px; color: var(--muted); font-size: 14px; }
+  footer p { max-width: 70ch; }
+
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: minmax(0, 1fr); gap: 36px; padding-bottom: 64px; }
+    .hero-copy { padding-top: 4px; }
+    .hero h1 { max-width: 16ch; }
+    .charts, .about, .help .list { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+    section.block { padding: 64px 0; }
+  }
+  @media (max-width: 520px) {
+    body { font-size: 16px; }
+    .wrap { padding: 0 18px; }
+    .card { padding: 22px 18px; border-radius: 20px; }
+    .two { grid-template-columns: minmax(0, 1fr); }
+    .facts div { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+    .bar { grid-template-columns: 5.2rem 1fr 3rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .gauge .fill, .pill span, .btn { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="Campus Check-in home">
+      <svg width="30" height="30" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="9" fill="#1C2541"/><path d="M7 21a9 9 0 0 1 18 0" fill="none" stroke="#7FD1C7" stroke-width="3.5" stroke-linecap="round"/></svg>
+      Campus Check-in
+    </a>
+    <nav aria-label="Main">
+      <a href="#checkin">Check-in</a>
+      <a href="#data">What the data says</a>
+      <a href="#about">How it works</a>
+      <a href="#help">Get help</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <div class="hero">
+      <div class="hero-copy">
+        <h1>How heavy has this term felt?</h1>
+        <p class="lede">Answer ten quick questions about your study load, sleep and stress. A model trained on 27,828 students shows how your answers compare with theirs.</p>
+        <dl class="facts">
+          <div><dt>Takes</dt><dd>About two minutes</dd></div>
+          <div><dt>Privacy</dt><dd>This site does not store your answers</dd></div>
+          <div><dt>Built on</dt><dd>A public student survey dataset from Kaggle</dd></div>
+        </dl>
+        <p class="notice">This is an awareness tool made for a data science case study. It cannot diagnose anything or tell you how you feel.</p>
+      </div>
+
+      <div class="card" id="checkin">
+        <div id="formView">
+          <h2>Your check-in</h2>
+          <p class="sub">Pick the option that fits you best. All questions are required.</p>
+
+          <form id="f" novalidate>
+            <fieldset>
+              <legend>Gender</legend>
+              <p class="hint">The dataset only recorded these two options.</p>
+              <div class="pills">
+                <label class="pill"><input type="radio" name="gender" value="Male"><span>Male</span></label>
+                <label class="pill"><input type="radio" name="gender" value="Female"><span>Female</span></label>
+              </div>
+            </fieldset>
+
+            <div class="two">
+              <div>
+                <label for="age" style="font-weight:600;display:block;margin-bottom:8px">Age</label>
+                <input id="age" name="age" type="number" inputmode="numeric" min="15" max="60" placeholder="21">
+              </div>
+              <div>
+                <label for="cgpa" style="font-weight:600;display:block;margin-bottom:8px">CGPA (out of 10)</label>
+                <input id="cgpa" name="cgpa" type="number" inputmode="decimal" step="0.01" min="0.1" max="10" placeholder="7.50">
+              </div>
+            </div>
+
+            <fieldset>
+              <legend>How much academic pressure do you feel?</legend>
+              <div class="scale">
+                <label class="pill"><input type="radio" name="academic_pressure" value="1"><span>1</span></label>
+                <label class="pill"><input type="radio" name="academic_pressure" value="2"><span>2</span></label>
+                <label class="pill"><input type="radio" name="academic_pressure" value="3"><span>3</span></label>
+                <label class="pill"><input type="radio" name="academic_pressure" value="4"><span>4</span></label>
+                <label class="pill"><input type="radio" name="academic_pressure" value="5"><span>5</span></label>
+              </div>
+              <div class="ends"><span>Very little</span><span>A great deal</span></div>
+            </fieldset>
+
+            <fieldset>
+              <legend>How satisfied are you with your studies?</legend>
+              <div class="scale">
+                <label class="pill"><input type="radio" name="study_satisfaction" value="1"><span>1</span></label>
+                <label class="pill"><input type="radio" name="study_satisfaction" value="2"><span>2</span></label>
+                <label class="pill"><input type="radio" name="study_satisfaction" value="3"><span>3</span></label>
+                <label class="pill"><input type="radio" name="study_satisfaction" value="4"><span>4</span></label>
+                <label class="pill"><input type="radio" name="study_satisfaction" value="5"><span>5</span></label>
+              </div>
+              <div class="ends"><span>Not at all</span><span>Very satisfied</span></div>
+            </fieldset>
+
+            <fieldset>
+              <legend>How stressed are you about money?</legend>
+              <div class="scale">
+                <label class="pill"><input type="radio" name="financial_stress" value="1"><span>1</span></label>
+                <label class="pill"><input type="radio" name="financial_stress" value="2"><span>2</span></label>
+                <label class="pill"><input type="radio" name="financial_stress" value="3"><span>3</span></label>
+                <label class="pill"><input type="radio" name="financial_stress" value="4"><span>4</span></label>
+                <label class="pill"><input type="radio" name="financial_stress" value="5"><span>5</span></label>
+              </div>
+              <div class="ends"><span>Not stressed</span><span>Very stressed</span></div>
+            </fieldset>
+
+            <fieldset>
+              <legend>How much do you sleep on most nights?</legend>
+              <div class="pills">
+                <label class="pill"><input type="radio" name="sleep_duration" value="Less than 5 hours"><span>Under 5 hours</span></label>
+                <label class="pill"><input type="radio" name="sleep_duration" value="5-6 hours"><span>5 to 6 hours</span></label>
+                <label class="pill"><input type="radio" name="sleep_duration" value="7-8 hours"><span>7 to 8 hours</span></label>
+                <label class="pill"><input type="radio" name="sleep_duration" value="More than 8 hours"><span>Over 8 hours</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>How would you describe your eating habits?</legend>
+              <div class="pills">
+                <label class="pill"><input type="radio" name="dietary_habits" value="Healthy"><span>Healthy</span></label>
+                <label class="pill"><input type="radio" name="dietary_habits" value="Moderate"><span>Moderate</span></label>
+                <label class="pill"><input type="radio" name="dietary_habits" value="Unhealthy"><span>Unhealthy</span></label>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Hours of work or study per day</legend>
+              <div class="range-row">
+                <input id="hours" name="work_study_hours" type="range" min="0" max="12" step="1" value="6" aria-label="Hours of work or study per day">
+                <output id="hoursOut" for="hours">6 hours</output>
+              </div>
+            </fieldset>
+
+            <fieldset>
+              <legend>Does mental illness run in your family?</legend>
+              <div class="pills">
+                <label class="pill"><input type="radio" name="family_history_of_mental_illness" value="No"><span>No</span></label>
+                <label class="pill"><input type="radio" name="family_history_of_mental_illness" value="Yes"><span>Yes</span></label>
+              </div>
+            </fieldset>
+
+            <div id="errors" class="errors" role="alert" hidden></div>
+            <button class="btn" id="go" type="submit">See how my answers compare</button>
+            <p class="server"><span class="dot" id="dot"></span><span id="serverText">Starting the prediction server. This can take up to a minute.</span></p>
+          </form>
+        </div>
+
+        <div id="resultView" class="result" tabindex="-1" hidden aria-live="polite">
+          <h2>Your result</h2>
+          <svg class="gauge" viewBox="0 0 200 118" role="img" aria-labelledby="gTitle">
+            <title id="gTitle">Model score</title>
+            <path class="track" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="16" stroke-linecap="round" pathLength="100"/>
+            <path id="gFill" class="fill" d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke-width="16" stroke-linecap="round" pathLength="100" stroke-dasharray="0 100"/>
+            <text id="gNum" x="100" y="92" text-anchor="middle" font-size="36">0%</text>
+          </svg>
+          <p class="band-label" id="bandLabel"></p>
+          <p class="band-text" id="bandText"></p>
+          <div class="support" id="support" hidden>
+            It can help to talk with someone you trust, or with a counsellor. <a href="#help">See help numbers</a>.
+          </div>
+          <div class="tips" id="tips"></div>
+          <p class="fine">This compares your answers with a dataset. It is not a diagnosis, and it can be wrong for any one person.</p>
+          <div class="actions">
+            <button class="btn ghost" id="again" type="button">Change my answers</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<section class="block band" id="data">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>What 27,828 student answers show</h2>
+      <p>These charts come from the analysis behind this tool. Each bar is the share of students in that group who were labelled depressed. They show patterns, not causes.</p>
+    </div>
+    <div class="charts">
+      <div class="chart">
+        <h3>Academic pressure shows the steepest climb</h3>
+        <div class="bars" id="chPressure"></div>
+        <p class="cap">Pressure level, 1 (lowest) to 5 (highest)</p>
+      </div>
+      <div class="chart">
+        <h3>Money worries follow the same pattern</h3>
+        <div class="bars" id="chMoney"></div>
+        <p class="cap">Financial stress level, 1 to 5</p>
+      </div>
+      <div class="chart">
+        <h3>Eating habits and age also line up</h3>
+        <div class="bars" id="chDiet"></div>
+        <p class="cap">Dietary habits</p>
+      </div>
+      <div class="chart">
+        <h3>Younger students reported more depression</h3>
+        <div class="bars" id="chAge"></div>
+        <p class="cap">Age group in years</p>
+      </div>
+    </div>
+    <p class="aside">Gender and marks made almost no difference. 58.4% of female and 58.6% of male students were labelled depressed, and CGPA had a correlation of just 0.02 with depression. Pressure to perform mattered far more than the results themselves.</p>
+  </div>
+</section>
+
+<section class="block" id="about">
+  <div class="wrap about">
+    <div class="section-head">
+      <h2>How this tool works</h2>
+      <p>A short, plain account of what is behind the result.</p>
+    </div>
+    <dl>
+      <div><dt>The data</dt><dd>The public Student Depression dataset from Kaggle. It had 27,901 rows, which became 27,828 students after cleaning.</dd></div>
+      <div><dt>The model</dt><dd>A Random Forest classifier that looks at academic pressure, financial stress, study satisfaction, work and study hours, sleep, eating habits, age, CGPA, gender and family history. It scored about 79% accuracy on students it had not seen before.</dd></div>
+      <div><dt>What it leaves out</dt><dd>The dataset also records suicidal thoughts. This site does not ask about that, because a website is the wrong place for it. If that is on your mind, please use the help numbers below.</dd></div>
+      <div><dt>Limits</dt><dd>The answers in the dataset were self-reported, patterns are not causes, and the model will be wrong for some people. Treat the result as a prompt to reflect, not a verdict.</dd></div>
+    </dl>
+  </div>
+</section>
+
+<section class="block help" id="help">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>If things feel heavy, talk to someone</h2>
+      <p>You do not need to wait until it feels serious. These services are free to call in India. Please check each number on its official site before relying on it.</p>
+    </div>
+    <!-- Verify these numbers before publishing -->
+    <div class="list">
+      <div>
+        <strong>Tele-MANAS</strong>
+        <a class="phone" href="tel:14416">14416</a>
+        <p>Government of India mental health helpline, open all day and night. Also reachable on 1-800-891-4416.</p>
+      </div>
+      <div>
+        <strong>KIRAN</strong>
+        <a class="phone" href="tel:18005990019">1800-599-0019</a>
+        <p>Government of India mental health rehabilitation helpline.</p>
+      </div>
+      <div>
+        <strong>Emergency</strong>
+        <a class="phone" href="tel:112">112</a>
+        <p>If you or someone near you may be in immediate danger, call this number now. You can also talk to your college counsellor or someone you trust.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <!-- Add your name, college and a GitHub link here -->
+    <p>Built as a student data science case study with the public Student Depression dataset (Kaggle). It is not a medical device, and nothing here is medical advice.</p>
+  </div>
+</footer>
+
+<script>
+  // Change this to your Render URL after deploying the backend, with no slash at the end.
+  // Example: "https://student-depression-api.onrender.com"
+  const API_URL = "http://127.0.0.1:8000";
+
+  /* ---------- charts (numbers from the case study analysis) ---------- */
+  function bars(id, rows) {
+    document.getElementById(id).innerHTML = rows.map(function (r) {
+      return '<div class="bar"><span class="lab">' + r[0] + '</span>' +
+        '<span class="track"><span class="fill" style="display:block;width:' + r[1] + '%"></span></span>' +
+        '<span class="val">' + r[1].toFixed(1) + '%</span></div>';
+    }).join("");
+  }
+  bars("chPressure", [["Level 1", 19.4], ["Level 2", 37.4], ["Level 3", 60.1], ["Level 4", 76.1], ["Level 5", 86.1]]);
+  bars("chMoney",    [["Level 1", 31.8], ["Level 2", 43.0], ["Level 3", 58.9], ["Level 4", 69.1], ["Level 5", 81.2]]);
+  bars("chDiet",     [["Healthy", 45.3], ["Moderate", 56.0], ["Unhealthy", 70.7]]);
+  bars("chAge",      [["18 to 21", 71.2], ["22 to 25", 63.4], ["26 to 30", 56.5], ["31 and over", 40.8]]);
+
+  /* ---------- wake up the server as soon as the page opens ---------- */
+  var dot = document.getElementById("dot"), serverText = document.getElementById("serverText");
+  function wake() {
+    fetch(API_URL + "/").then(function (r) {
+      if (!r.ok) throw new Error();
+      dot.className = "dot ok"; serverText.textContent = "Prediction server is ready.";
+    }).catch(function () {
+      dot.className = "dot bad";
+      serverText.textContent = "The prediction server is not responding yet. It may still be starting.";
+    });
+  }
+  wake();
+
+  /* ---------- form ---------- */
+  var f = document.getElementById("f");
+  var hours = document.getElementById("hours"), hoursOut = document.getElementById("hoursOut");
+  hours.addEventListener("input", function () {
+    hoursOut.textContent = hours.value + (hours.value === "1" ? " hour" : " hours");
+  });
+
+  var groups = {
+    gender: "Gender",
+    academic_pressure: "Academic pressure",
+    study_satisfaction: "Study satisfaction",
+    financial_stress: "Financial stress",
+    sleep_duration: "Sleep",
+    dietary_habits: "Eating habits",
+    family_history_of_mental_illness: "Family history"
+  };
+
+  function collect() {
+    var data = {}, missing = [];
+    Object.keys(groups).forEach(function (name) {
+      var el = f.querySelector('input[name="' + name + '"]:checked');
+      if (el) data[name] = el.value; else missing.push(groups[name]);
+    });
+    var age = parseFloat(f.age.value), cgpa = parseFloat(f.cgpa.value);
+    if (!(age >= 15 && age <= 60)) missing.push("Age (15 to 60)"); else data.age = age;
+    if (!(cgpa > 0 && cgpa <= 10)) missing.push("CGPA (0.1 to 10)"); else data.cgpa = cgpa;
+    data.work_study_hours = Number(hours.value);
+    ["academic_pressure", "study_satisfaction", "financial_stress"].forEach(function (k) {
+      if (data[k] !== undefined) data[k] = Number(data[k]);
+    });
+    return { data: data, missing: missing };
+  }
+
+  var errBox = document.getElementById("errors");
+  function showError(msg) { errBox.textContent = msg; errBox.hidden = false; }
+
+  f.addEventListener("submit", function (e) {
+    e.preventDefault();
+    errBox.hidden = true;
+    var c = collect();
+    if (c.missing.length) {
+      showError("Please answer: " + c.missing.join(", ") + ".");
+      return;
+    }
+    var btn = document.getElementById("go");
+    btn.disabled = true; btn.textContent = "Checking your answers. This can take up to a minute if the server was idle.";
+    var ctrl = new AbortController();
+    var timer = setTimeout(function () { ctrl.abort(); }, 90000);
+    fetch(API_URL + "/predict", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(c.data), signal: ctrl.signal
+    }).then(function (r) {
+      if (!r.ok) throw new Error("bad response");
+      return r.json();
+    }).then(function (out) {
+      dot.className = "dot ok"; serverText.textContent = "Prediction server is ready.";
+      showResult(out, c.data);
+    }).catch(function () {
+      showError("The prediction server did not answer. If it was idle, wait a minute and press the button again.");
+    }).finally(function () {
+      clearTimeout(timer);
+      btn.disabled = false; btn.textContent = "See how my answers compare";
+    });
+  });
+
+  /* ---------- result ---------- */
+  var formView = document.getElementById("formView"), resultView = document.getElementById("resultView");
+  var gFill = document.getElementById("gFill");
+  var colors = { Low: "#3F8A5A", Moderate: "#B7791F", High: "#C8514B" };
+  var bands = {
+    Low:      ["A lower match", "Your answers look more like students who did not report depression in the dataset."],
+    Moderate: ["A mixed match", "Your answers sit between the two groups of students in the dataset."],
+    High:     ["A higher match", "Your answers look more like students who reported depression in the dataset."]
+  };
+
+  function tipsFor(d) {
+    var t = [];
+    if (d.academic_pressure >= 4) t.push("Academic pressure was the strongest factor in the data: 86% of students at level 5 were labelled depressed, against 19% at level 1. Talking to a mentor about workload or deadlines can lighten it.");
+    if (d.financial_stress >= 4) t.push("High money stress also stood out in the data. Your college may have a scholarship, fee-support or student aid office worth asking.");
+    if (d.sleep_duration === "Less than 5 hours") t.push("Sleeping under five hours was linked with the highest rate (64.5%) among the sleep groups. A steady bedtime is often the easiest place to start.");
+    if (d.dietary_habits === "Unhealthy") t.push("Students who described their eating as unhealthy had a higher rate in the data (70.7%, against 45.3% for healthy eating).");
+    if (d.work_study_hours >= 10) t.push("Ten or more hours of work and study a day went with higher rates. Planning short breaks into long days may help.");
+    if (d.study_satisfaction <= 2) t.push("Low satisfaction with studies was linked with higher rates. A chat with a faculty member about what is not working can be a useful first step.");
+    var html = '<h3>What stood out in your answers</h3>';
+    if (t.length) html += '<ul>' + t.map(function (x) { return '<li>' + x + '</li>'; }).join("") + '</ul>';
+    else html += '<p>Nothing in your answers stood out strongly among the factors this tool looks at.</p>';
+    return html;
+  }
+
+  function showResult(out, d) {
+    var level = bands[out.risk_level] ? out.risk_level : "Moderate";
+    document.getElementById("bandLabel").textContent = bands[level][0];
+    document.getElementById("bandText").textContent = bands[level][1];
+    document.getElementById("tips").innerHTML = tipsFor(d);
+    document.getElementById("support").hidden = (level !== "High");
+    gFill.style.stroke = colors[level];
+    gFill.setAttribute("stroke-dasharray", "0 100");
+    document.getElementById("gNum").textContent = Math.round(out.probability) + "%";
+    formView.hidden = true; resultView.hidden = false;
+    resultView.focus({ preventScroll: true });
+    resultView.scrollIntoView({ block: "start" });
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        gFill.setAttribute("stroke-dasharray", out.probability + " 100");
+      });
+    });
+  }
+
+  document.getElementById("again").addEventListener("click", function () {
+    resultView.hidden = true; formView.hidden = false;
+    document.getElementById("checkin").scrollIntoView({ block: "start" });
+  });
+</script>
+<noscript><p style="padding:24px">This page needs JavaScript to run the check-in.</p></noscript>
+</body>
+</html>
